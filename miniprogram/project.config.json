@@ -1,0 +1,28 @@
+{
+  "appid": "your-appid-here",
+  "projectname": "health-store-miniprogram",
+  "miniprogramRoot": "./",
+  "compileType": "miniprogram",
+  "setting": {
+    "useCompilerPlugins": ["javascript"],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "bundle": false,
+    "minified": false,
+    "enhance": true,
+    "showShadowRootInWxmlPanel": true,
+    "packNpmRelation": {
+      "miniprogramNpmDistDir": "./miniprogram",
+      "miniprogramNpmPackageDir": "./"
+    },
+    "ignoreUploadUnusedFiles": true,
+    "compileHotReLoad": false,
+    "skylineRenderEnable": false
+  },
+  "condition": {},
+  "libVersion": "2.32.0",
+  "srcMiniprogramRoot": "./miniprogram/"
+}

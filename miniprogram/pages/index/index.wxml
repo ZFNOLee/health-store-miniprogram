@@ -1,0 +1,68 @@
+<view class="container">
+  <!-- 签到卡片 -->
+  <view class="checkin-card" bindtap="doCheckin">
+    <view class="checkin-info">
+      <text class="checkin-title">每日签到</text>
+      <text class="checkin-desc">签到领积分，积分当钱花</text>
+    </view>
+    <view class="checkin-btn {{checkedIn ? 'checked' : ''}}">
+      {{checkedIn ? '已签到' : '立即签到'}}
+    </view>
+  </view>
+
+  <!-- 用户信息概览 -->
+  <view class="user-overview">
+    <view class="info-item">
+      <text class="label">会员等级</text>
+      <text class="value">{{memberLevelName}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">可用积分</text>
+      <text class="value highlight">{{availablePoints}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">累计积分</text>
+      <text class="value">{{totalPoints}}</text>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="quick-actions">
+    <view class="action-item" bindtap="goToPage" data-page="/pages/products/products">
+      <text class="icon">🛒</text>
+      <text class="text">浏览商品</text>
+    </view>
+    <view class="action-item" bindtap="goToPage" data-page="/pages/points/points">
+      <text class="icon">📊</text>
+      <text class="text">积分明细</text>
+    </view>
+    <view class="action-item" bindtap="goToPage" data-page="/pages/user/user">
+      <text class="icon">👤</text>
+      <text class="text">个人中心</text>
+    </view>
+    <view class="action-item" wx:if="{{isAdmin}}" bindtap="goToPage" data-page="/pages/admin/admin">
+      <text class="icon">⚙️</text>
+      <text class="text">后台管理</text>
+    </view>
+  </view>
+
+  <!-- 热门商品 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">热门商品</text>
+      <text class="section-more" bindtap="goToPage" data-page="/pages/products/products">查看全部 ></text>
+    </view>
+    <view class="product-list">
+      <view class="product-item" wx:for="{{hotProducts}}" wx:key="id" bindtap="viewProduct" data-id="{{item.id}}">
+        <image class="product-img" src="{{item.images || '/images/default-product.png'}}" mode="aspectFill"></image>
+        <view class="product-info">
+          <text class="product-name">{{item.name}}</text>
+          <view class="product-price">
+            <text class="price">¥{{item.price}}</text>
+            <text class="points" wx:if="{{item.points_price}}">{{item.points_price}} 积分</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

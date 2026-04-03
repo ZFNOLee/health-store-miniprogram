@@ -1,0 +1,57 @@
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索商品" bindinput="onSearch" value="{{keyword}}" />
+    <view class="search-btn" bindtap="search">搜索</view>
+  </view>
+
+  <!-- 分类筛选 -->
+  <scroll-view class="category-scroll" scroll-x>
+    <view class="category-list">
+      <view class="category-item {{currentCategory === 0 ? 'active' : ''}}" 
+            bindtap="selectCategory" 
+            data-id="0">全部</view>
+      <view class="category-item {{currentCategory === item.id ? 'active' : ''}}" 
+            wx:for="{{categories}}" 
+            wx:key="id"
+            bindtap="selectCategory" 
+            data-id="{{item.id}}">{{item.name}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 商品列表 -->
+  <view class="product-list">
+    <view class="product-item" wx:for="{{products}}" wx:key="id" bindtap="viewProduct" data-id="{{item.id}}">
+      <image class="product-img" src="{{item.images || '/images/default-product.png'}}" mode="aspectFill"></image>
+      <view class="product-info">
+        <text class="product-name">{{item.name}}</text>
+        <text class="product-desc">{{item.description}}</text>
+        <view class="product-footer">
+          <view class="price-box">
+            <text class="price">¥{{item.price}}</text>
+            <text class="points" wx:if="{{item.points_price}}">{{item.points_price}} 积分</text>
+          </view>
+          <text class="stock">库存：{{item.stock}}</text>
+        </view>
+        <view class="action-btns">
+          <button class="buy-btn" catchtap="buyProduct" data-id="{{item.id}}">购买</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{products.length === 0 && !loading}}">
+    <text class="empty-text">暂无商品</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{hasMore}}" bindtap="loadMore">
+    <text>加载更多</text>
+  </view>
+</view>

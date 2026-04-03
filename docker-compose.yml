@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # 后端服务
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: health-store-server
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./database:/app/database
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - health-store-network
+
+  # 数据库初始化（一次性运行）
+  init-db:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: health-store-init-db
+    command: npm run init-db
+    volumes:
+      - ./database:/app/database
+      - ../database/schema.sql:/app/database/schema.sql
+    depends_on:
+      - server
+    networks:
+      - health-store-network
+
+networks:
+  health-store-network:
+    driver: bridge

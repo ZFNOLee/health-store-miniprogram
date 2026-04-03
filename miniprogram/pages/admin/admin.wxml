@@ -1,0 +1,61 @@
+<view class="container">
+  <view class="page-header">
+    <text class="page-title">后台管理</text>
+  </view>
+
+  <!-- 管理功能入口 -->
+  <view class="admin-grid">
+    <view class="admin-card" bindtap="goToPage" data-page="/pages/admin/products">
+      <text class="admin-icon">🛒</text>
+      <text class="admin-text">商品管理</text>
+    </view>
+    <view class="admin-card" bindtap="goToPage" data-page="/pages/admin/users">
+      <text class="admin-icon">👥</text>
+      <text class="admin-text">用户管理</text>
+    </view>
+    <view class="admin-card" bindtap="goToPage" data-page="/pages/admin/orders">
+      <text class="admin-icon">📦</text>
+      <text class="admin-text">订单管理</text>
+    </view>
+    <view class="admin-card" bindtap="goToPage" data-page="/pages/admin/points">
+      <text class="admin-icon">📊</text>
+      <text class="admin-text">积分管理</text>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">快捷操作</text>
+    </view>
+    <view class="quick-actions">
+      <button class="action-btn primary" bindtap="goToAddProduct">+ 添加商品</button>
+      <button class="action-btn" bindtap="exportData">导出数据</button>
+    </view>
+  </view>
+
+  <!-- 数据统计 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">数据概览</text>
+    </view>
+    <view class="stats-grid">
+      <view class="stat-card">
+        <text class="stat-value">{{stats.productCount}}</text>
+        <text class="stat-label">商品总数</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-value">{{stats.userCount}}</text>
+        <text class="stat-label">用户总数</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-value">{{stats.orderCount}}</text>
+        <text class="stat-label">订单总数</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-value">{{stats.todayPoints}}</text>
+        <text class="stat-label">今日积分</text>
+      </view>
+    </view>
+  </view>
+</view>
