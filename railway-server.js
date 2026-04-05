@@ -23,40 +23,43 @@ const dbPath = path.join(__dirname, 'database/health-store.db');
 let db;
 let SQL;
 
+// saveDb 定义为独立函数，与 app 无关，任何地方都可调用
+function saveDb() {
+  try {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(dbPath, buffer);
+  } catch (e) {
+    console.error('数据库保存失败:', e.message);
+  }
+}
+
 async function initDatabase() {
   SQL = await initSqlJs();
 
   if (fs.existsSync(dbPath)) {
     const fileBuffer = fs.readFileSync(dbPath);
     db = new SQL.Database(fileBuffer);
-    console.log('📍 已加载现有数据库:', dbPath);
+    console.log('已加载现有数据库:', dbPath);
   } else {
     // 确保目录存在
     const dir = path.dirname(dbPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     db = new SQL.Database();
-    console.log('📍 创建新数据库:', dbPath);
-    // 初始化表结构
+    console.log('创建新数据库:', dbPath);
+    // 初始化表结构（saveDb 已在上方定义，可以安全调用）
     initSchema();
   }
 
-  // 保存数据库
-  app.saveDb = function () {
-    try {
-      const data = db.export();
-      const buffer = Buffer.from(data);
-      fs.writeFileSync(dbPath, buffer);
-    } catch (e) {
-      console.error('数据库保存失败:', e.message);
-    }
-  };
+  // 挂载到 app 以便路由中使用（向后兼容）
+  app.saveDb = saveDb;
 
   // 每 30 秒自动保存
-  setInterval(() => app.saveDb(), 30000);
+  setInterval(saveDb, 30000);
 
   // 进程退出时保存
-  process.on('SIGTERM', () => { app.saveDb(); process.exit(0); });
-  process.on('SIGINT',  () => { app.saveDb(); process.exit(0); });
+  process.on('SIGTERM', () => { saveDb(); process.exit(0); });
+  process.on('SIGINT',  () => { saveDb(); process.exit(0); });
 
   app.set('db', db);
   app.set('sql', SQL);
@@ -156,7 +159,8 @@ function initSchema() {
   // 插入测试数据
   insertTestData();
 
-  app.saveDb();
+  // 保存初始化后的数据库（saveDb 是模块级函数，此时已可用）
+  saveDb();
 }
 
 function insertTestData() {
