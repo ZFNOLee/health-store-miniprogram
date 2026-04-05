@@ -155,5 +155,26 @@ module.exports = (app) => {
     }
   });
 
+  // 调整用户等级
+  router.put('/:id/level', (req, res) => {
+    try {
+      const db = getDb();
+      const { member_level } = req.body;
+      const validLevels = ['normal', 'silver', 'gold', 'diamond'];
+      if (!member_level || !validLevels.includes(member_level)) {
+        return res.status(400).json({ success: false, message: '无效的会员等级' });
+      }
+      const result = db.exec(`SELECT id FROM users WHERE id = ${parseInt(req.params.id)}`);
+      if (!result[0] || result[0].values.length === 0) {
+        return res.status(404).json({ success: false, message: '用户不存在' });
+      }
+      db.run(`UPDATE users SET member_level = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [member_level, parseInt(req.params.id)]);
+      app.saveDb();
+      res.json({ success: true, message: '会员等级已更新' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
   return router;
 };
