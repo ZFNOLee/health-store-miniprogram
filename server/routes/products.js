@@ -11,29 +11,17 @@ module.exports = (app) => {
       const { category_id, status, keyword, page = 1, limit = 20 } = req.query;
       const offset = (page - 1) * limit;
       
-      let query = `
-        SELECT p.*, c.name as category_name 
-        FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
-        WHERE 1=1
-      `;
-      
-      // 检查 categories 表是否存在
-      try {
-        db.exec('SELECT 1 FROM categories LIMIT 1');
-      } catch (e) {
-        // 如果表不存在，使用简化查询
-        query = `SELECT p.*, '' as category_name FROM products p WHERE 1=1`;
-      }
+      let query = `SELECT p.* FROM products p WHERE 1=1`;
       
       if (category_id) {
         query += ` AND p.category_id = ${parseInt(category_id)}`;
       }
       
-      if (status) {
+      // 管理后台传 status=all 则不过滤，默认只看上架
+      if (status && status !== 'all') {
         query += ` AND p.status = '${status}'`;
-      } else {
-        query += " AND p.status = 'onsale'";
+      } else if (!status) {
+        query += ` AND p.status = 'onsale'`;
       }
       
       if (keyword) {
@@ -44,19 +32,23 @@ module.exports = (app) => {
       
       const result = db.exec(query);
       const products = result[0]?.values || [];
+      const cols = result[0]?.columns || [];
       
-      // 获取总数
-      const countQuery = query.replace(/SELECT.*?FROM/, 'SELECT COUNT(*) FROM').replace(/ORDER BY.*$/, '');
-      const totalResult = db.exec(countQuery);
-      const total = totalResult[0]?.values[0][0] || 0;
-      
-      // 转换为对象数组
-      const columns = ['id', 'name', 'description', 'category_id', 'price', 'points_price', 'stock', 'status', 'images', 'created_at', 'updated_at', 'category_name'];
+      // 使用真实列名映射，而非硬编码下标
       const productsObj = products.map(row => {
         const product = {};
-        columns.forEach((col, i) => product[col] = row[i]);
+        cols.forEach((col, i) => product[col] = row[i]);
         return product;
       });
+      
+      // 获取总数
+      let countBase = `SELECT COUNT(*) FROM products WHERE 1=1`;
+      if (category_id) countBase += ` AND category_id = ${parseInt(category_id)}`;
+      if (status && status !== 'all') countBase += ` AND status = '${status}'`;
+      else if (!status) countBase += ` AND status = 'onsale'`;
+      if (keyword) countBase += ` AND (name LIKE '%${keyword}%' OR description LIKE '%${keyword}%')`;
+      const totalResult = db.exec(countBase);
+      const total = totalResult[0]?.values[0][0] || 0;
       
       res.json({
         success: true,
@@ -72,12 +64,7 @@ module.exports = (app) => {
   router.get('/:id', (req, res) => {
     try {
       const db = getDb();
-      const result = db.exec(`
-        SELECT p.*, c.name as category_name 
-        FROM products p 
-        LEFT JOIN categories c ON p.category_id = c.id 
-        WHERE p.id = ${req.params.id}
-      `);
+      const result = db.exec(`SELECT * FROM products WHERE id = ${parseInt(req.params.id)}`);
       
       if (!result[0] || result[0].values.length === 0) {
         return res.status(404).json({ success: false, message: '商品不存在' });
@@ -104,10 +91,10 @@ module.exports = (app) => {
         return res.status(400).json({ success: false, message: '商品名称和价格必填' });
       }
       
-      db.run(`
-        INSERT INTO products (name, description, category_id, price, points_price, stock, status, images)
-        VALUES ('${name}', '${description || ''}', ${category_id || 'NULL'}, ${price}, ${points_price || 0}, ${stock || 0}, '${status || 'draft'}', '${images || ''}')
-      `);
+      db.run(
+        `INSERT INTO products (name, description, category_id, price, points_price, stock, status, images) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, description || '', category_id || null, price, points_price || 0, stock || 0, status || 'onsale', images || '']
+      );
       app.saveDb();
       
       const result = db.exec('SELECT last_insert_rowid()');
