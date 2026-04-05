@@ -562,7 +562,7 @@
       try {
         const [users, products, orders] = await Promise.all([
           fetch(`${API_BASE}/users?limit=1`).then(r => r.json()),
-          fetch(`${API_BASE}/products?limit=1`).then(r => r.json()),
+          fetch(`${API_BASE}/products?limit=1&status=all`).then(r => r.json()),
           fetch(`${API_BASE}/orders?limit=1`).then(r => r.json())
         ]);
         
@@ -578,7 +578,7 @@
     // 加载商品
     async function loadProducts() {
       try {
-        const res = await fetch(`${API_BASE}/products?limit=100`);
+        const res = await fetch(`${API_BASE}/products?limit=100&status=all`);
         const data = await res.json();
         
         const html = data.data.map(p => `
@@ -728,66 +728,52 @@
       }
     }
 
-    // 积分操作
-    async function earnPoints() {
-      const userId = document.getElementById('earnUserId').value;
-      const amount = document.getElementById('earnAmount').value;
-      const source = document.getElementById('earnSource').value;
-      
-      if (!userId || !amount) {
-        showToast('❌ 请填写用户 ID 和积分数量');
-        return;
-      }
-      
-      try {
-        await fetch(`${API_BASE}/points/earn`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: parseInt(userId), amount: parseInt(amount), source })
-        });
-        
-        showToast(`✅ 成功派发 ${amount} 积分`);
-      } catch (error) {
-        showToast('派发失败');
-      }
-    }
-
-    async function spendPoints() {
-      const userId = document.getElementById('spendUserId').value;
-      const amount = document.getElementById('spendAmount').value;
-      const reason = document.getElementById('spendReason').value;
-      
-      if (!userId || !amount) {
-        showToast('❌ 请填写用户 ID 和积分数量');
-        return;
-      }
-      
-      try {
-        await fetch(`${API_BASE}/points/spend`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: parseInt(userId), amount: parseInt(amount), source: reason })
-        });
-        
-        showToast(`✅ 成功扣除 ${amount} 积分`);
-      } catch (error) {
-        showToast('扣除失败');
-      }
-    }
-
     // 订单操作
     async function updateOrderStatus(id, status) {
       try {
-        await fetch(`${API_BASE}/orders/${id}/status`, {
+        const res = await fetch(`${API_BASE}/orders/${id}/status`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status })
         });
-        
-        showToast(`✅ 订单状态已更新`);
-        loadOrders();
+        const data = await res.json();
+        if (data.success) {
+          showToast(`✅ 订单状态已更新`);
+          loadOrders();
+        } else {
+          showToast('❌ ' + (data.message || '更新失败'));
+        }
       } catch (error) {
-        showToast('更新失败');
+        showToast('更新失败：' + error.message);
+      }
+    }
+
+    // 调整用户等级
+    async function editUserLevel(userId) {
+      const levelNames = { normal: '普通会员', silver: '银卡会员', gold: '金卡会员', diamond: '钻石会员' };
+      const options = Object.entries(levelNames).map(([k, v]) => `${k}(${v})`).join(' / ');
+      const newLevel = prompt(`请输入新等级（normal / silver / gold / diamond）：\n\n${options}`);
+      if (!newLevel) return;
+      const validLevels = ['normal', 'silver', 'gold', 'diamond'];
+      if (!validLevels.includes(newLevel.trim())) {
+        showToast('❌ 无效的等级，请输入 normal / silver / gold / diamond');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/users/${userId}/level`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ member_level: newLevel.trim() })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`✅ 会员等级已调整为 ${levelNames[newLevel.trim()]}`);
+          loadUsers();
+        } else {
+          showToast('❌ ' + (data.message || '调整失败'));
+        }
+      } catch (error) {
+        showToast('调整失败：' + error.message);
       }
     }
 
