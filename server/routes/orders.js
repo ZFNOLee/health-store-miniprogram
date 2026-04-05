@@ -184,7 +184,7 @@ module.exports = (app) => {
       `);
       
       const orderIdResult = db.exec('SELECT last_insert_rowid()');
-      const orderId = orderIdResult[0].values[0][0];
+      const orderId = Number(orderIdResult[0].values[0][0]);
       
       // 创建订单明细
       items.forEach(item => {
