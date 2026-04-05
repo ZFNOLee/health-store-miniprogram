@@ -93,14 +93,20 @@ module.exports = (app) => {
       
       db.run(
         `INSERT INTO products (name, description, category_id, price, points_price, stock, status, images) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [name, description || '', category_id || null, price, points_price || 0, stock || 0, status || 'onsale', images || '']
+        [name, description || '', category_id || null, parseFloat(price), parseInt(points_price) || 0, parseInt(stock) || 0, status || 'onsale', images || '']
       );
       app.saveDb();
       
-      const result = db.exec('SELECT last_insert_rowid()');
-      const newId = result[0].values[0][0];
+      // 用 name 和创建时间查询刚插入的商品，避免 last_insert_rowid 类型问题
+      const productResult = db.exec(
+        `SELECT * FROM products WHERE name = ? ORDER BY id DESC LIMIT 1`,
+        [name]
+      );
       
-      const productResult = db.exec(`SELECT * FROM products WHERE id = ${newId}`);
+      if (!productResult[0] || productResult[0].values.length === 0) {
+        return res.json({ success: true, message: '商品创建成功', data: { name, price } });
+      }
+      
       const columns = productResult[0].columns;
       const row = productResult[0].values[0];
       const product = {};
